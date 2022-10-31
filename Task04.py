@@ -1,6 +1,6 @@
 from ASCII import table
 
-key = "BOLOTKAN"
+key = "БОЛОТКАН"
 
 
 def binValue(val, bitSize):
@@ -47,5 +47,5 @@ def getASCII(key):
 
     return bitArray
 
-arr = stringToBitArray(key)
-print(getASCII("АБВ"))
+arr = getASCII(key)
+print(len(arr), arr)

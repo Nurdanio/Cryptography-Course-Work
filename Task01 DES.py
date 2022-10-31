@@ -1,5 +1,4 @@
 def main():
-
     # Taking inputs from the user
     plaintext = "ABDIEV N"
     key = "BOLOTKAN"
@@ -20,6 +19,7 @@ def main():
     print("Зашифрованый текст: %r " % ciphertext)
     print("Дешифрованный текст: ", plaintext)
     print()
+
 
 # Permutation Matrix used after each SBox substitution for each round
 eachRoundPermutationMatrix = [
@@ -55,6 +55,7 @@ def DESEncryption(key, text, padding):
     # Returning ciphertext
     return ciphertext
 
+
 def DESDecryption(key, text, padding):
     """Function for DES Decryption."""
 
@@ -69,6 +70,7 @@ def DESDecryption(key, text, padding):
     # Returning plaintext
     return plaintext
 
+
 # Initial Permutation Matrix for data
 initialPermutationMatrix = [
     58, 50, 42, 34, 26, 18, 10, 2,
@@ -81,7 +83,7 @@ initialPermutationMatrix = [
     63, 55, 47, 39, 31, 23, 15, 7
 ]
 
-#Expand matrix to get a 48bits matrix of datas to apply the xor with Ki
+# Expand matrix to get a 48bits matrix of datas to apply the xor with Ki
 expandMatrix = [
     32, 1, 2, 3, 4, 5,
     4, 5, 6, 7, 8, 9,
@@ -150,6 +152,7 @@ def DES(text, key, padding, isEncrypt):
 
     return finalResult
 
+
 # Matrix used for shifting after each round of keys
 SHIFT = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
 
@@ -175,6 +178,7 @@ keyPermutationMatrix2 = [
     34, 53, 46, 42, 50, 36, 29, 32
 ]
 
+
 def generateKeys(key):
     """Function to generate keys for different rounds of DES."""
 
@@ -199,6 +203,7 @@ def generateKeys(key):
 
     # Return generated keys
     return keys
+
 
 # Sboxes used in the DES Algorithm
 SboxesArray = [
@@ -259,6 +264,7 @@ SboxesArray = [
     ]
 ]
 
+
 def SboxSubstitution(bitArray):
     """Function to substitute all the bytes using Sbox."""
 
@@ -270,7 +276,7 @@ def SboxSubstitution(bitArray):
     for i in range(len(blocks)):
         block = blocks[i]
         # Row number to be obtained from first and last bit
-        row = int( str(block[0]) + str(block[5]), 2 )
+        row = int(str(block[0]) + str(block[5]), 2)
         # Getting column number from the 2,3,4,5 position bits
         column = int(''.join([str(x) for x in block[1:-1]]), 2)
         # Taking value from ith Sbox in ith round
@@ -295,6 +301,7 @@ def addPadding(text):
     # Returning text
     return text
 
+
 def removePadding(data):
     """Function to remove padding from plaintext according to PKCS5."""
 
@@ -302,33 +309,39 @@ def removePadding(data):
     paddingLength = ord(data[-1])
 
     # Returning data with removed padding
-    return data[ : -paddingLength]
+    return data[: -paddingLength]
+
 
 def expand(array, table):
     """Function to expand the array using table."""
     # Returning expanded result
     return [array[element - 1] for element in table]
 
+
 def permutation(array, table):
     """Function to do permutation on the array using table."""
     # Returning permuted result
     return [array[element - 1] for element in table]
+
 
 def leftShift(list1, list2, n):
     """Function to left shift the arrays by n."""
     # Left shifting the two arrays
     return list1[n:] + list1[:n], list2[n:] + list2[:n]
 
+
 def nSplit(list, n):
     """Function to split a list into chunks of size n."""
     # Chunking and returning the array of chunks of size n
     # and last remainder
-    return [ list[i : i + n] for i in range(0, len(list), n)]
+    return [list[i: i + n] for i in range(0, len(list), n)]
+
 
 def xor(list1, list2):
     """Function to return the XOR of two lists."""
     # Returning the xor of the two lists
-    return [element1 ^ element2 for element1, element2 in zip(list1,list2)]
+    return [element1 ^ element2 for element1, element2 in zip(list1, list2)]
+
 
 def binValue(val, bitSize):
     """Function to return the binary value as a string of given size."""
@@ -341,6 +354,7 @@ def binValue(val, bitSize):
 
     # Returning binary value
     return binVal
+
 
 def stringToBitArray(text):
     """Funtion to convert a string into a list of bits."""
@@ -357,6 +371,7 @@ def stringToBitArray(text):
 
     # Returning answer
     return bitArray
+
 
 def bitArrayToString(array):
     """Function to convert a list of bits to string."""
@@ -380,6 +395,7 @@ def bitArrayToString(array):
 
     # Returning result
     return result
+
 
 if __name__ == '__main__':
     main()

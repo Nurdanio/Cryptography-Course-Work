@@ -3,22 +3,24 @@ q = 19
 d = 25
 e = 121
 
-#Modulus
+# Modulus
 n = p * q
 
-#Eyler funtion
-phi = (p-1)*(q-1)
+# Eyler funtion
+phi = (p - 1) * (q - 1)
 
-#Encryption
+
+# Encryption
 def encryption(message):
     x = []
     for i in message:
         a = ord(i)
-        b = (a**e) % n
+        b = (a ** e) % n
         x.append(b)
     return x
 
-#Decryption
+
+# Decryption
 def decryption(crypt_message):
     y = ""
     for i in crypt_message:
@@ -27,11 +29,10 @@ def decryption(crypt_message):
         y += c
     return y
 
+
 message = "АНБ"
 crypt_message = encryption(message)
 decrypt_message = decryption(crypt_message)
 print("Исходное сообщение: ", message)
 print("Зашифрованное сообщение: ", crypt_message)
 print("Дешифрованное сообщение: ", decrypt_message)
-
-
