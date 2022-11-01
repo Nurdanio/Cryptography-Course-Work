@@ -1,27 +1,29 @@
 # ГОСТ 28147-89
+from ASCII import table
 def main():
     # Исходные данные
-    text = "ABDIEV N"
-    key = "ALINa posla sobiratb gribysdfsfd"
+    text = "АБДИЕВ Н"
+    key = "АЛИНА ПОШЛА СОБИРАТЬ ГРИБЫ В ЛЕС"
 
     # Шифровка
     ciphertext = GOST(text, key)
 
     # Дешифровка
-    plaintext = GOST(ciphertext, key)
+    # plaintext = GOST(ciphertext, key)
 
     # Вывод результатов
     print("Исходное сообщение:", text)
     print("Ключ: ", key)
     print("Зашифрованый текст:", ciphertext)
-    print("Дешифрованный текст:", plaintext)
+    # print("Дешифрованный текст:", plaintext)
 
 
 def GOST(text, key):
     """Основная функция алгоритма ГОСТ"""
 
     # Переводим текст в битовый массивый
-    block = stringToBitArray(text)
+    block = getASCII(text)
+    print(len(block),block)
 
     # Разбиваем на правый и на левый блок
     leftBlock, rightBlock = nSplit(block, 32)
@@ -30,8 +32,10 @@ def GOST(text, key):
     leftBlock1 = rightBlock
 
     # Переводим ключ в битовый массив и разбиваем ключ на подключи
-    keys = stringToBitArray(key)
+    keys = getASCII(key)
     K1 = gettingKeys(keys)
+    print(len(keys), keys)
+    print(len(K1), K1)
 
     # Суммируем по модулю 32
     xorBlock = xor32(rightBlock, K1)
@@ -142,17 +146,25 @@ def BinValue(val, bitSize):
 
     return binVal
 
-def stringToBitArray(text):
-    """Функция перевода в массив битов"""
+# def stringToBitArray(text):
+#     """Функция перевода в массив битов"""
+#
+#     bitArray = []
+#     for letter in text:
+#         # Getting binary (8-bit) value of letter
+#         binVal = BinValue(letter, 8)
+#         # Making list of the bits
+#         binValArr = [int(x) for x in list(binVal)]
+#         # Apending the bits to array
+#         bitArray += binValArr
+#
+#     return bitArray
 
+def getASCII(key):
     bitArray = []
-    for letter in text:
-        # Getting binary (8-bit) value of letter
-        binVal = BinValue(letter, 8)
-        # Making list of the bits
-        binValArr = [int(x) for x in list(binVal)]
-        # Apending the bits to array
-        bitArray += binValArr
+
+    for i in key:
+        bitArray += table(i)
 
     return bitArray
 

@@ -1,77 +1,6 @@
-def main():
-    # Taking inputs from the user
-    plaintext = "ABDIEV N"
-    key = "BOLOTKAN"
-    print("Текст для шифровки: ", plaintext)
-    print("Ключ: ", key)
+from ASCII import table, alphabet
 
-    # Determining if padding is required
-    isPaddingRequired = (len(plaintext) % 8 != 0)
-
-    # Encryption
-    ciphertext = DESEncryption(key, plaintext, isPaddingRequired)
-
-    # Decryption
-    plaintext = DESDecryption(key, ciphertext, isPaddingRequired)
-
-    # Printing result
-    print()
-    print("Зашифрованый текст: %r " % ciphertext)
-    print("Дешифрованный текст: ", plaintext)
-    print()
-
-
-# Permutation Matrix used after each SBox substitution for each round
-eachRoundPermutationMatrix = [
-    16, 7, 20, 21, 29, 12, 28, 17,
-    1, 15, 23, 26, 5, 18, 31, 10,
-    2, 8, 24, 14, 32, 27, 3, 9,
-    19, 13, 30, 6, 22, 11, 4, 25
-]
-
-# Final Permutation Matrix for data after 16 rounds
-finalPermutationMatrix = [
-    40, 8, 48, 16, 56, 24, 64, 32,
-    39, 7, 47, 15, 55, 23, 63, 31,
-    38, 6, 46, 14, 54, 22, 62, 30,
-    37, 5, 45, 13, 53, 21, 61, 29,
-    36, 4, 44, 12, 52, 20, 60, 28,
-    35, 3, 43, 11, 51, 19, 59, 27,
-    34, 2, 42, 10, 50, 18, 58, 26,
-    33, 1, 41, 9, 49, 17, 57, 25
-]
-
-
-def DESEncryption(key, text, padding):
-    """Function for DES Encryption."""
-
-    # Adding padding if required
-    if padding == True:
-        text = addPadding(text)
-
-    # Encryption
-    ciphertext = DES(text, key, padding, True)
-
-    # Returning ciphertext
-    return ciphertext
-
-
-def DESDecryption(key, text, padding):
-    """Function for DES Decryption."""
-
-    # Decryption
-    plaintext = DES(text, key, padding, False)
-
-    # Removing padding if required
-    if padding == True:
-        # Removing padding and returning plaintext
-        return removePadding(plaintext)
-
-    # Returning plaintext
-    return plaintext
-
-
-# Initial Permutation Matrix for data
+# Матрица для первичной перемешки
 initialPermutationMatrix = [
     58, 50, 42, 34, 26, 18, 10, 2,
     60, 52, 44, 36, 28, 20, 12, 4,
@@ -83,7 +12,7 @@ initialPermutationMatrix = [
     63, 55, 47, 39, 31, 23, 15, 7
 ]
 
-# Expand matrix to get a 48bits matrix of datas to apply the xor with Ki
+# Матрица для расширения ключа 32-48
 expandMatrix = [
     32, 1, 2, 3, 4, 5,
     4, 5, 6, 7, 8, 9,
@@ -95,68 +24,7 @@ expandMatrix = [
     28, 29, 30, 31, 32, 1
 ]
 
-
-def DES(text, key, padding, isEncrypt):
-    """Function to implement DES Algorithm."""
-
-    # Initializing variables required
-    isDecrypt = not isEncrypt
-    # Generating keys
-    keys = generateKeys(key)
-
-    # Splitting text into 8 byte blocks
-    plaintext8byteBlocks = nSplit(text, 8)
-    result = []
-
-    # For all 8-byte blocks of text
-    for block in plaintext8byteBlocks:
-
-        # Convert the block into bit array
-        block = stringToBitArray(block)
-
-        # Do the initial permutation
-        block = permutation(block, initialPermutationMatrix)
-
-        # Splitting block into two 4 byte (32 bit) sized blocks
-        leftBlock, rightBlock = nSplit(block, 32)
-
-        temp = None
-
-        # Running 16 identical DES Rounds for each block of text
-        for i in range(16):
-            # Expand rightBlock to match round key size(48-bit)
-            expandedRightBlock = expand(rightBlock, expandMatrix)
-
-            # Xor right block with appropriate key
-            if isEncrypt == True:
-                # For encryption, starting from first key in normal order
-                temp = xor(keys[i], expandedRightBlock)
-            elif isDecrypt == True:
-                # For decryption, starting from last key in reverse order
-                temp = xor(keys[15 - i], expandedRightBlock)
-            # Sbox substitution Step
-            temp = SboxSubstitution(temp)
-            # Permutation Step
-            temp = permutation(temp, eachRoundPermutationMatrix)
-            # XOR Step with leftBlock
-            temp = xor(leftBlock, temp)
-
-            # Blocks swapping
-            leftBlock = rightBlock
-            rightBlock = temp
-        # Final permutation then appending result
-        result += permutation(rightBlock + leftBlock, finalPermutationMatrix)
-
-    # Converting bit array to string
-    finalResult = bitArrayToString(result)
-
-    return finalResult
-
-
-# Matrix used for shifting after each round of keys
-SHIFT = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
-
-# Permutation matrix for key
+# Матрица перестановок для ключа
 keyPermutationMatrix1 = [
     57, 49, 41, 33, 25, 17, 9,
     1, 58, 50, 42, 34, 26, 18,
@@ -168,44 +36,26 @@ keyPermutationMatrix1 = [
     21, 13, 5, 28, 20, 12, 4
 ]
 
-# Permutation matrix for shifted key to get next key
-keyPermutationMatrix2 = [
-    14, 17, 11, 24, 1, 5, 3, 28,
-    15, 6, 21, 10, 23, 19, 12, 4,
-    26, 8, 16, 7, 27, 20, 13, 2,
-    41, 52, 31, 37, 47, 55, 30, 40,
-    51, 45, 33, 48, 44, 49, 39, 56,
-    34, 53, 46, 42, 50, 36, 29, 32
+# Матрица перестановок, используемая после каждой замены SBox для каждого раунда
+eachRoundPermutationMatrix = [
+    16, 7, 20, 21, 29, 12, 28, 17,
+    1, 15, 23, 26, 5, 18, 31, 10,
+    2, 8, 24, 14, 32, 27, 3, 9,
+    19, 13, 30, 6, 22, 11, 4, 25
 ]
 
+# Матрица конкратенации
+finalPermutationMatrix = [
+    40, 8, 48, 16, 56, 24, 64, 32,
+    39, 7, 47, 15, 55, 23, 63, 31,
+    38, 6, 46, 14, 54, 22, 62, 30,
+    37, 5, 45, 13, 53, 21, 61, 29,
+    36, 4, 44, 12, 52, 20, 60, 28,
+    35, 3, 43, 11, 51, 19, 59, 27,
+    34, 2, 42, 10, 50, 18, 58, 26,
+    33, 1, 41, 9, 49, 17, 57, 25
+]
 
-def generateKeys(key):
-    """Function to generate keys for different rounds of DES."""
-
-    # Inititalizing variables required
-    keys = []
-    key = stringToBitArray(key)
-
-    # Initial permutation on key
-    key = permutation(key, keyPermutationMatrix1)
-
-    # Split key in to (leftBlock->LEFT), (rightBlock->RIGHT)
-    leftBlock, rightBlock = nSplit(key, 28)
-
-    # 16 rounds of keys
-    for i in range(16):
-        # Do left shifting (different for different rounds)
-        leftBlock, rightBlock = leftShift(leftBlock, rightBlock, SHIFT[i])
-        # Merge them
-        temp = leftBlock + rightBlock
-        # Permutation on shifted key to get next key
-        keys.append(permutation(temp, keyPermutationMatrix2))
-
-    # Return generated keys
-    return keys
-
-
-# Sboxes used in the DES Algorithm
 SboxesArray = [
     [
         [14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
@@ -265,95 +115,154 @@ SboxesArray = [
 ]
 
 
-def SboxSubstitution(bitArray):
-    """Function to substitute all the bytes using Sbox."""
+def main():
+    message = "АБДИЕВ Н"
+    key = "БОЛОТКАН"
+    print("Текст для шифровки: ", message)
+    print("Ключ: ", key)
 
-    # Split bit array into 6 sized chunks
-    # For Sbox indexing
+    # Шифровка
+    ciphertext = DES(message, key, True)
+    # Дешифровка
+    text = DES(ciphertext, key, False)
+
+    print("Зашифрованый текст: %r " % ciphertext)
+    print("Дешифрованный текст: ", text)
+
+
+def DES(message, key, isEncrypt):
+    result = []
+
+    # Переводим текст на двоичный вид
+    if isEncrypt == True:
+        block = getASCII(message)
+
+    if isEncrypt == False:
+        block = stringToBitArray(message)
+
+    # Начальная перестановка IP
+    block = permutation(block, initialPermutationMatrix)
+
+    # Получаем значание ключа
+    key = generateKey(key)
+
+    # Разделяем блок на левый и правый подблоки по 32 бита
+    leftBlock, rightBlock = nSplit(block, 32)
+
+    # Производим раширение для правого подблока до 48 бит
+    expandedRightMatrix = expand(rightBlock, expandMatrix)
+
+    # Сложение по модулю 2 расширенного правого подблока с ключем
+    temp = xor(key, expandedRightMatrix)
+
+    # S-box
+    Sbox = SboxSubstitution(temp)
+
+    # Перестановка Р
+    perm = permutation(Sbox, eachRoundPermutationMatrix)
+
+    # XOR левого подблока с правым
+    xorValue = xor(leftBlock, perm)
+
+    # Меняем местами правый и левый подблоки
+    leftBlock = rightBlock
+    rightBlock = xorValue
+
+    # Выполняем итоговую операцию перестановки
+    result += permutation(rightBlock + leftBlock, finalPermutationMatrix)
+
+    if isEncrypt == True:
+        # Конвертивуем биты в текст
+        finalResult = bitArrayToString(result)
+    if isEncrypt == False:
+        # Конвертивуем биты в текст
+        finalResult = bitArrayToASCII(result)
+
+    return finalResult
+
+
+def binValue(val, bitSize):
+    """Функция для возврата двоичного значения в виде строки заданного размера."""
+
+    binVal = bin(val)[2:] if isinstance(val, int) else bin(ord(val))[2:]
+
+    # Добавление с необходимым количеством нулей впереди
+    while len(binVal) < bitSize:
+        binVal = "0" + binVal
+
+    return binVal
+
+
+def getASCII(value):
+    bitArray = []
+
+    for i in value:
+        bitArray += table(i)
+
+    return bitArray
+
+
+def nSplit(list, n):
+    """Функция для разделения списка на куски размера n."""
+    # Фрагментирование и возврат массива фрагментов размера n
+    return [list[i: i + n] for i in range(0, len(list), n)]
+
+
+def expand(array, table):
+    """Функция расширения массива с помощью таблицы."""
+
+    return [array[element - 1] for element in table]
+
+
+def xor(list1, list2):
+    """Функция для возврата XOR двух списков."""
+    # Возврат xor двух списков
+    return [element1 ^ element2 for element1, element2 in zip(list1, list2)]
+
+
+def permutation(array, table):
+    """Функция для перестановки массива с использованием таблицы."""
+    # Возврат переставленного результата
+    return [array[element - 1] for element in table]
+
+
+def generateKey(array):
+    """Функция генерации ключей для разных раундa DES."""
+
+    array = getASCII(array)
+
+    mas = []
+    # Первично удаляем каждый 8 бит
+    mas[:] = [x for i, x in enumerate(array, start=1) if i % 8]
+    # Вторично удаляем каждый 8 бит
+    mas[:] = [x for i, x in enumerate(mas, start=1) if i % 8]
+    # Удаляем последний элемент списка
+    del mas[47]
+
+    return mas
+
+
+def SboxSubstitution(bitArray):
+    """Функция замены всех байтов с помощью Sbox."""
+
+    # Разбиваем массив на 8 подмассивов по 6 элементов
     blocks = nSplit(bitArray, 6)
     result = []
 
     for i in range(len(blocks)):
         block = blocks[i]
-        # Row number to be obtained from first and last bit
+        # Получаем значение строки
         row = int(str(block[0]) + str(block[5]), 2)
-        # Getting column number from the 2,3,4,5 position bits
+        # Получаем значение столбца
         column = int(''.join([str(x) for x in block[1:-1]]), 2)
-        # Taking value from ith Sbox in ith round
+        # Получаем значение из S-box
         sboxValue = SboxesArray[i][row][column]
-        # Convert the sbox value to binary
+        # Конвертируем целовисленное значение в битовое
         binVal = binValue(sboxValue, 4)
-        # Appending to result
+        # Сохраняем результат в массиве
         result += [int(bit) for bit in binVal]
 
-    # Returning result
     return result
-
-
-def addPadding(text):
-    """Function to add padding according to PKCS5 standard."""
-
-    # Determining padding length
-    paddingLength = 8 - (len(text) % 8)
-    # Adding paddingLength number of chr(paddingLength) to text
-    text += chr(paddingLength) * paddingLength
-
-    # Returning text
-    return text
-
-
-def removePadding(data):
-    """Function to remove padding from plaintext according to PKCS5."""
-
-    # Getting padding length
-    paddingLength = ord(data[-1])
-
-    # Returning data with removed padding
-    return data[: -paddingLength]
-
-
-def expand(array, table):
-    """Function to expand the array using table."""
-    # Returning expanded result
-    return [array[element - 1] for element in table]
-
-
-def permutation(array, table):
-    """Function to do permutation on the array using table."""
-    # Returning permuted result
-    return [array[element - 1] for element in table]
-
-
-def leftShift(list1, list2, n):
-    """Function to left shift the arrays by n."""
-    # Left shifting the two arrays
-    return list1[n:] + list1[:n], list2[n:] + list2[:n]
-
-
-def nSplit(list, n):
-    """Function to split a list into chunks of size n."""
-    # Chunking and returning the array of chunks of size n
-    # and last remainder
-    return [list[i: i + n] for i in range(0, len(list), n)]
-
-
-def xor(list1, list2):
-    """Function to return the XOR of two lists."""
-    # Returning the xor of the two lists
-    return [element1 ^ element2 for element1, element2 in zip(list1, list2)]
-
-
-def binValue(val, bitSize):
-    """Function to return the binary value as a string of given size."""
-
-    binVal = bin(val)[2:] if isinstance(val, int) else bin(ord(val))[2:]
-
-    # Appending with required number of zeros in front
-    while len(binVal) < bitSize:
-        binVal = "0" + binVal
-
-    # Returning binary value
-    return binVal
 
 
 def stringToBitArray(text):
@@ -374,27 +283,37 @@ def stringToBitArray(text):
 
 
 def bitArrayToString(array):
-    """Function to convert a list of bits to string."""
+    """Функция для преобразования списка битов в строку."""
 
-    # Chunking array of bits to 8 sized bytes
+    # Разделение массива битов на 8 байтов
     byteChunks = nSplit(array, 8)
-    # Initializing variables required
     stringBytesList = []
-    stringResult = ''
-    # For each byte
+
+    # Для каждого байта
     for byte in byteChunks:
         bitsList = []
         for bit in byte:
             bitsList += str(bit)
-        # Appending byte in string form to stringBytesList
+        # Добавление байта в строковой форме к stringBytesList
         stringBytesList.append(''.join(bitsList))
 
-    # Converting each stringByte to char (base 2 int conversion first)
-    # and then concatenating
+    # Преобразование каждого stringByte в char (сначала преобразование в int с основанием 2), а затем объединение
     result = ''.join([chr(int(stringByte, 2)) for stringByte in stringBytesList])
 
-    # Returning result
     return result
+
+def bitArrayToASCII(array):
+    """Функция для преобразования списка битов в строку."""
+
+    # Разделение массива битов на 8 байтов
+    byteChunks = nSplit(array, 8)
+    text = ""
+
+    for byte in byteChunks:
+        letter = alphabet(byte)
+        text += letter
+
+    return text
 
 
 if __name__ == '__main__':

@@ -6,7 +6,8 @@ e = 121
 # Modulus
 n = p * q
 
-# Eyler funtion
+# Euler function
+
 phi = (p - 1) * (q - 1)
 
 
