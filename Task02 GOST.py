@@ -1,81 +1,113 @@
 # ГОСТ 28147-89
-from ASCII import table
+from ASCII import table, alphabet
+from Functions import binValue, getASCII, nSplit, xor, stringToBitArray, bitArrayToString, bitArrayToASCII
+
+
 def main():
+    """Основная функция алгоритма ГОСТ 28147-89"""
+
     # Исходные данные
-    text = "АБДИЕВ Н"
-    key = "АЛИНА ПОШЛА СОБИРАТЬ ГРИБЫ В ЛЕС"
+    message = "АБДИЕВ Н"
+    key = "РЕНТГЕНОЭЛЕКТРОКАРДИОГРАФИЧЕСКИЙ"
+
+    print("Текст для шифровки: ", message)
+    print("Ключ: ", key)
 
     # Шифровка
-    ciphertext = GOST(text, key)
+    ciphertext = GOST(message, key, True)
+    print("Зашифрованый текст: %r " % ciphertext)
 
     # Дешифровка
-    # plaintext = GOST(ciphertext, key)
-
-    # Вывод результатов
-    print("Исходное сообщение:", text)
-    print("Ключ: ", key)
-    print("Зашифрованый текст:", ciphertext)
-    # print("Дешифрованный текст:", plaintext)
+    text = GOST(ciphertext, key, False)
+    print("Дешифрованный текст: ", text)
 
 
-def GOST(text, key):
+def GOST(text, key, isEncrypt):
     """Основная функция алгоритма ГОСТ"""
 
-    # Переводим текст в битовый массивый
-    block = getASCII(text)
-    print(len(block),block)
+    # Переводим ключ в битовый массив и разбиваем ключ на подключи
+    keys = getASCII(key)
 
-    # Разбиваем на правый и на левый блок
-    leftBlock, rightBlock = nSplit(block, 32)
+    # Инициализируем массивы для хранения значений текста и ключа раунда в битовом формате
+    block = []
+    K1 = []
+    finalResult = ""
+
+    # Условие для шифровки
+    if isEncrypt:
+        # Переводим текст в битовый массивый
+        block = getASCII(text)
+        # Генерируем ключ раунда
+        K1 = gettingKeys(keys)
+        # Разбиваем на правый и на левый блок
+        leftBlock, rightBlock = nSplit(block, 32)
+
+    # Условие для дешифровки
+    if not isEncrypt:
+        # Переводим текст в битовый массивый
+        block = stringToBitArray(text)
+        # Генерируем ключ раунда
+        K1 = gettingKeys(keys)
+        # Разбиваем на правый и на левый блок
+        rightBlock, leftBlock = nSplit(block, 32)
+
 
     # Присваеваем значения правого блока в левый блок следующей итерации
     leftBlock1 = rightBlock
 
-    # Переводим ключ в битовый массив и разбиваем ключ на подключи
-    keys = getASCII(key)
-    K1 = gettingKeys(keys)
-    print(len(keys), keys)
-    print(len(K1), K1)
-
     # Суммируем по модулю 32
-    xorBlock = xor32(rightBlock, K1)
+    xorBlock = mod32(rightBlock, K1)
     # Шаг замены S-box
     SResult = SBlocks(xorBlock)
+
     # Делаем сдвиг на 11 элементов
     ShiftResult = Shift(SResult, 11)
+
     # Делаем операцию xor между правым и левым блоками
-    rightBlock1= xor(ShiftResult, leftBlock)
-    # Полный битовый массив
-    encrypt = leftBlock1 + rightBlock1
+    rightBlock1 = xor(ShiftResult, leftBlock)
 
-    finalResult = bitArrayToString(encrypt)
+    if isEncrypt:
+        # Полный битовый массив
+        encrypt = leftBlock1 + rightBlock1
+        finalResult = bitArrayToString(encrypt)
 
-    # print("Левый блок: ", len(leftBlock), leftBlock)
-    # print("Правый блок:", len(rightBlock), rightBlock)
-    # print("Подключ: ", len(K1), K1)
-    # print("S-box массив:", len(SResult), SResult)
-    # print("После сдвига:", len(ShiftResult), ShiftResult)
-    # print("Блок R1:",len(rightBlock1), rightBlock1)
-    # print("Итог:", len(encrypt), encrypt)
-    # print(finalResult)
+    if not isEncrypt:
+        encrypt = rightBlock1 + leftBlock1
+        finalResult = bitArrayToASCII(encrypt)
 
     return finalResult
 
-def nSplit(list, n):
-    """ Метод для разделения массива на части"""
 
-    return [list[i: i + n] for i in range(0, len(list), n)]
+def mod32(num1, num2):
+    """Функция суммирования по модулю 32"""
 
-def xor32(list1, list2):
-    """Надо с этой хуйней поебаться"""
+    # перевернуть числа для удобства выполнения операций
+    num1 = num1[::-1]
+    num2 = num2[::-1]
 
-    # result = []
-    # for i, j in zip(list1, list2):
-    #     m = (i + j) % 32
-    #     result.append(m)
-    # return result
+    # дополнить числа нулями
+    size = max(len(num1), len(num2))
 
-    return [element1 ^ element2 for element1, element2 in zip(list1, list2)]
+    num1 += [0] * (size - len(num1))
+    num2 += [0] * (size - len(num2))
+
+    # сложить 2 числа
+    overflow = 0
+    res = []
+    for obj in zip(num1, num2):
+        value = obj[0] + obj[1] + overflow
+        overflow = value // 2
+        res.append(value % 2)
+
+    # если флаг переполнения установлен - добавить бит в начало нового числа
+    if overflow == 1:
+        res.append(1)
+
+    # перевернуть число назад
+    res = res[::-1]
+
+    return res[1:]
+
 
 # S-блок, используемый в алгоритме ГОСТ
 SboxesArray = [
@@ -96,6 +128,7 @@ SboxesArray = [
     [8, 2, 15, 11, 5, 9, 5, 5],
     [12, 12, 14, 2, 3, 11, 9, 3]
 ]
+
 
 def SBlocks(list):
     """Функция замены всех битов с помощью Sbox"""
@@ -121,10 +154,12 @@ def SBlocks(list):
 
     return result
 
+
 def Shift(list, n):
     """Фунция для сдвига элементов на 11 позиций"""
 
-    return list[n:]+list[:n]
+    return list[n:] + list[:n]
+
 
 def binToInt(block):
     """Функция перевода двоичного значения в десятичное"""
@@ -132,9 +167,10 @@ def binToInt(block):
     number = 0
     len_dat = len(block)
     for i in range(0, len_dat):
-        number += int(block[i]) * (2**(len_dat - i - 1))
+        number += int(block[i]) * (2 ** (len_dat - i - 1))
 
     return number
+
 
 def BinValue(val, bitSize):
     """Функция получения битового значания"""
@@ -146,55 +182,6 @@ def BinValue(val, bitSize):
 
     return binVal
 
-# def stringToBitArray(text):
-#     """Функция перевода в массив битов"""
-#
-#     bitArray = []
-#     for letter in text:
-#         # Getting binary (8-bit) value of letter
-#         binVal = BinValue(letter, 8)
-#         # Making list of the bits
-#         binValArr = [int(x) for x in list(binVal)]
-#         # Apending the bits to array
-#         bitArray += binValArr
-#
-#     return bitArray
-
-def getASCII(key):
-    bitArray = []
-
-    for i in key:
-        bitArray += table(i)
-
-    return bitArray
-
-def bitArrayToString(array):
-    """Функция для преобразования списка битов в строку"""
-
-    # Разделение массива битов на 8 байтов
-    byteChunks = nSplit(array, 8)
-    # Инициализируем переменные
-    stringBytesList = []
-    stringResult = ''
-    # Проходим для каждому байту
-    for byte in byteChunks:
-        bitsList = []
-        for bit in byte:
-            bitsList += str(bit)
-        # Добавление байта в виде строки в stringBytesList
-        stringBytesList.append(''.join(bitsList))
-
-    # Преобразование каждого stringByte в char (сначала преобразование в int с основанием 2)
-    # а затем объединение
-    result = ''.join([chr(int(stringByte, 2)) for stringByte in stringBytesList])
-
-    # Возвращаемый результат
-    return result
-
-def xor(list1, list2):
-    """Фунция сложения по модулю 2"""
-
-    return [element1 ^ element2 for element1, element2 in zip(list1, list2)]
 
 def gettingKeys(key):
     """Функция для получения первых 32 бит ключа"""
@@ -210,6 +197,7 @@ def gettingKeys(key):
             break
 
     return keys
+
 
 if __name__ == '__main__':
     main()
